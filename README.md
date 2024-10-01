@@ -1,4 +1,4 @@
-requirementts
+requirements
 data processing
 models
 train
