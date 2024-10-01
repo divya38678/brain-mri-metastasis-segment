@@ -1,0 +1,29 @@
+import numpy as np
+from models import unet_nested, attention_unet
+from tensorflow.keras.callbacks import EarlyStopping
+
+# Load data
+X_train = np.load('X_train.npy')
+X_test = np.load('X_test.npy')
+y_train = np.load('y_train.npy')
+y_test = np.load('y_test.npy')
+
+# Reshape data
+X_train = X_train.reshape((-1, 256, 256, 1))
+X_test = X_test.reshape((-1, 256, 256, 1))
+y_train = y_train.reshape((-1, 256, 256, 1))
+y_test = y_test.reshape((-1, 256, 256, 1))
+
+# Initialize models
+model_nested = unet_nested()
+model_attention = attention_unet()
+
+# Train models
+early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+
+history_nested = model_nested.fit(X_train, y_train, epochs=50, batch_size=16, validation_split=0.2, callbacks=[early_stopping])
+history_attention = model_attention.fit(X_train, y_train, epochs=50, batch_size=16, validation_split=0.2, callbacks=[early_stopping])
+
+# Save models
+model_nested.save('nested_unet.h5')
+model_attention.save('attention_unet.h5')
