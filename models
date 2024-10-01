@@ -1,0 +1,67 @@
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, Concatenate, Attention
+from tensorflow.keras.models import Model
+
+def unet_nested(input_size=(256, 256, 1)):
+    inputs = Input(input_size)
+    conv1 = Conv2D(64, 3, activation='relu', padding='same')(inputs)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+
+    conv2 = Conv2D(128, 3, activation='relu', padding='same')(pool1)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+
+    conv3 = Conv2D(256, 3, activation='relu', padding='same')(pool2)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+
+    conv4 = Conv2D(512, 3, activation='relu', padding='same')(pool3)
+
+    up3 = UpSampling2D(size=(2, 2))(conv4)
+    merge3 = Concatenate()([conv3, up3])
+    conv5 = Conv2D(256, 3, activation='relu', padding='same')(merge3)
+
+    up2 = UpSampling2D(size=(2, 2))(conv5)
+    merge2 = Concatenate()([conv2, up2])
+    conv6 = Conv2D(128, 3, activation='relu', padding='same')(merge2)
+
+    up1 = UpSampling2D(size=(2, 2))(conv6)
+    merge1 = Concatenate()([conv1, up1])
+    conv7 = Conv2D(64, 3, activation='relu', padding='same')(merge1)
+
+    conv_final = Conv2D(1, 1, activation='sigmoid')(conv7)
+
+    model = Model(inputs, conv_final)
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+def attention_unet(input_size=(256, 256, 1)):
+    inputs = Input(input_size)
+    conv1 = Conv2D(64, 3, activation='relu', padding='same')(inputs)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+
+    conv2 = Conv2D(128, 3, activation='relu', padding='same')(pool1)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+
+    conv3 = Conv2D(256, 3, activation='relu', padding='same')(pool2)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+
+    conv4 = Conv2D(512, 3, activation='relu', padding='same')(pool3)
+
+    up3 = UpSampling2D(size=(2, 2))(conv4)
+    attention = Attention()([conv3, up3])
+    merge3 = Concatenate()([conv3, attention])
+    conv5 = Conv2D(256, 3, activation='relu', padding='same')(merge3)
+
+    up2 = UpSampling2D(size=(2, 2))(conv5)
+    attention = Attention()([conv2, up2])
+    merge2 = Concatenate()([conv2, attention])
+    conv6 = Conv2D(128, 3, activation='relu', padding='same')(merge2)
+
+    up1 = UpSampling2D(size=(2, 2))(conv6)
+    attention = Attention()([conv1, up1])
+    merge1 = Concatenate()([conv1, attention])
+    conv7 = Conv2D(64, 3, activation='relu', padding='same')(merge1)
+
+    conv_final = Conv2D(1, 1, activation='sigmoid')(conv7)
+
+    model = Model(inputs, conv_final)
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
