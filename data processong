@@ -1,0 +1,38 @@
+import cv2
+import numpy as np
+import os
+from sklearn.model_selection import train_test_split
+
+def apply_clahe(image):
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    return clahe.apply(image)
+
+def preprocess_data(data_dir):
+    images = []
+    masks = []
+    
+    for filename in os.listdir(data_dir):
+        if filename.endswith('.png') or filename.endswith('.jpg'):
+            image_path = os.path.join(data_dir, filename)
+            mask_path = os.path.join(data_dir, filename.replace('.jpg', '_mask.png'))  # Adjust based on your mask naming
+
+            if os.path.exists(mask_path):
+                image = cv2.imread(image_path)
+                mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+                
+                enhanced_image = apply_clahe(image)
+                
+                images.append(enhanced_image)
+                masks.append(mask)
+
+    return np.array(images), np.array(masks)
+
+if _name_ == "_main_":
+    images, masks = preprocess_data("path/to/dataset")
+    X_train, X_test, y_train, y_test = train_test_split(images, masks, test_size=0.2, random_state=42)
+    np.save('X_train.npy', X_train)
+    np.save('X_test.npy', X_test)
+    np.save('y_train.npy', y_train)
+    np.save('y_test.npy', y_test)
